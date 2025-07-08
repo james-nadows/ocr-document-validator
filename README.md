@@ -56,7 +56,7 @@ docker run -p 8000:8000 fastapi-doc-validator
  - Deploy to any Docker host: DigitalOcean, AWS EC2, Render, Railway
  - Push this image to Docker Hub or use in a CI/CD pipeline
  - For Render or Railway: Use uvicorn main:app --host 0.0.0.0 --port 10000 as start command
-
+ - run local command: uvicorn main:app --reload
 ## 🧪 Test the API
 
 ### Using curl:

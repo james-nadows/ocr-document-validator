@@ -1,23 +1,45 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.openapi.models import Response
+from fastapi.openapi.utils import get_openapi
+from typing import List
 import pytesseract
 from PIL import Image, ImageOps
 import pdfplumber
 import io
-import re
 import tempfile
 import os
+import re
 
-app = FastAPI()
+app = FastAPI(
+    title="📄 API Document Validator (OCR + PDF)",
+    description="""
+This service allows users to upload scanned documents (PDFs or images), 
+and validates them based on expected keywords for document types like:
 
-# Middleware: Limit upload size to 20MB
-@app.middleware("http")
-async def limit_upload_size(request: Request, call_next):
-    max_body_size = 20 * 1024 * 1024
-    content_length = request.headers.get("content-length")
-    if content_length and int(content_length) > max_body_size:
-        return JSONResponse(status_code=413, content={"detail": "File too large. Max 20 MB allowed."})
-    return await call_next(request)
+- UMID / PhilID
+- Business Permit
+- Articles of Incorporation
+- DTI License
+- BIR Form
+- Passport, Driver’s License, TIN ID, etc.
+""",
+    version="1.0.0"
+)
+
+DOCUMENT_KEYWORDS = {
+    "sss-gsis-umid": ["unified multi-purpose id", "multi-purpose", "pambansang pagkakakilanlan", "philippine identification card", "gsis", "sss"],
+    "philid": ["philippine identification card", "pambansang pagkakakilanlan"],
+    "business-permit": ["business permit"],
+    "articles-of-incorporation": ["articles of incorporation", "incorporated"],
+    "dti-license": ["department of trade and industry", "dti certificate"],
+    "bir-form": ["bir form", "bureau of internal revenue"],
+    "amended-gis": ["amended general information sheet", "amended gis"],
+    "sec": ["securities and exchange commission"],
+    "passport": ["passport", "republic of the philippines passport"],
+    "drivers-license": ["driver's license", "dln"],
+    "tin-id": ["taxpayer identification number", "tin id"]
+}
 
 def normalize_text(text: str) -> str:
     return re.sub(r'\s+', ' ', text).lower()
@@ -36,7 +58,7 @@ def extract_text_from_image(path: str) -> str:
 def extract_text_from_pdf(path: str) -> str:
     text = ""
     with pdfplumber.open(path) as pdf:
-        for i, page in enumerate(pdf.pages):
+        for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
                 text += page_text + "\n"
@@ -60,31 +82,25 @@ def process_file(file: UploadFile) -> str:
     finally:
         os.remove(tmp_path)
 
-# 🧠 Keyword map per document type
-DOCUMENT_KEYWORDS = {
-    "sss-gsis-umid": ["unified multi-purpose id", "multi-purpose", "pambansang pagkakakilanlan", "philippine identification card", "gsis", "sss"],
-    "philid": ["philippine identification card", "pambansang pagkakakilanlan"],
-    "business-permit": ["business permit"],
-    "articles-of-incorporation": ["articles of incorporation", "incorporated"],
-    "dti-license": ["department of trade and industry", "dti certificate"],
-    "bir-form": ["bir form", "bureau of internal revenue"],
-    "amended-gis": ["amended general information sheet", "amended gis"],
-    "sec": ["securities and exchange commission"],
-    "passport": ["passport", "republic of the philippines passport"],
-    "drivers-license": ["driver's license", "dln"],
-    "tin-id": ["taxpayer identification number", "tin id"]
-}
-
-@app.post("/validate-file")
-async def verify_file(type: str = Form(...), file: UploadFile = File(...)):
+@app.post(
+    "/validate-file",
+    summary="Validate Uploaded Document",
+    description="Upload a document (image or PDF) and specify the type to validate its authenticity based on detected keywords.",
+    response_description="Validation result with keyword detection details.",
+)
+async def validate_file(
+    type: str = Form(..., description="Document type (e.g., `sss-gsis-umid`, `bir-form`, `business-permit`, etc.)"),
+    file: UploadFile = File(..., description="PDF or image file to be validated")
+):
+    """
+    Validates document content by checking expected keywords based on its type.
+    """
     try:
         if type not in DOCUMENT_KEYWORDS:
             raise HTTPException(status_code=400, detail="Unsupported document type")
 
         raw_text = process_file(file)
         normalized_text = normalize_text(raw_text)
-
-        # Check for any matching keyword
         keywords = DOCUMENT_KEYWORDS[type]
         found_keyword = next((kw for kw in keywords if kw in normalized_text), None)
 
