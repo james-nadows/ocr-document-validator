@@ -27,8 +27,8 @@ Uses `pytesseract` and `pdfplumber` to extract and analyze content.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/fastapi-doc-validator.git
-cd fastapi-doc-validator
+git clone https://github.com/MugssyBoy/python.scan_pdf_images.git
+cd python.scan_pdf_images
 ```
 
 ### 2. Create requirements.txt
@@ -44,12 +44,12 @@ pillow
 
 ### 1. Build the Docker image
 ```bash
-docker build -t fastapi-doc-validator .
+docker build -t python.scan_pdf_images .
 ```
 
 ### 2. Run the container
 ```bash
-docker run -p 8000:8000 fastapi-doc-validator
+docker run -p 8000:8000 python.scan_pdf_images
 ```
 
 ### 🌐 Deployment Options
