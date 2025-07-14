@@ -99,7 +99,7 @@ def process_file(file: UploadFile) -> str:
     response_description="Validation result with keyword detection details.",
 )
 async def validate_file(
-    type: str = Form(..., description="Document type ID"),
+    type: int = Form(..., description="Document type ID"),
     file: UploadFile = File(..., description="PDF or image file to be validated")
 ):
     """
