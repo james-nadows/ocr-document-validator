@@ -28,17 +28,27 @@ and validates them based on expected keywords for document types like:
 )
 
 DOCUMENT_KEYWORDS = {
-    "sss-gsis-umid": ["unified multi-purpose id", "multi-purpose", "pambansang pagkakakilanlan", "philippine identification card", "gsis", "sss"],
-    "philid": ["philippine identification card", "pambansang pagkakakilanlan"],
-    "business-permit": ["business permit"],
-    "articles-of-incorporation": ["articles of incorporation", "incorporated"],
-    "dti-license": ["department of trade and industry", "dti certificate"],
-    "bir-form": ["bir form", "bureau of internal revenue"],
-    "amended-gis": ["amended general information sheet", "amended gis"],
-    "sec": ["securities and exchange commission"],
-    "passport": ["passport", "republic of the philippines passport"],
-    "drivers-license": ["driver's license", "dln"],
-    "tin-id": ["taxpayer identification number", "tin id"]
+    105: ["unified multi-purpose id", "pambansang pagkakakilanlan", "philippine identification card", "gsis", "sss"],
+    103: ["passport", "republic of the philippines passport"],
+    104: ["driver's license", "dln"],
+    102: ["business permit"],
+    106: ["taxpayer identification number", "tin id"],
+    123: ["articles of incorporation", "incorporated"],
+    124: ["license", "permit", "business permit"],
+    125: ["general information sheet", "gis"],
+    126: ["securities and exchange commission", "certificate of incorporation"],
+    127: ["bureau of internal revenue", "bir form"],
+    129: [
+            "unified multi-purpose id", 
+            "pambansang pagkakakilanlan", 
+            "philippine identification card", 
+            "gsis", 
+            "sss", 
+            "passport", 
+            "identification", 
+            "driver's license", 
+            "dln"
+        ],
 }
 
 def normalize_text(text: str) -> str:
@@ -89,7 +99,7 @@ def process_file(file: UploadFile) -> str:
     response_description="Validation result with keyword detection details.",
 )
 async def validate_file(
-    type: str = Form(..., description="Document type (e.g., `sss-gsis-umid`, `bir-form`, `business-permit`, etc.)"),
+    type: str = Form(..., description="Document type ID"),
     file: UploadFile = File(..., description="PDF or image file to be validated")
 ):
     """
@@ -110,4 +120,4 @@ async def validate_file(
             "debug_text_snippet": normalized_text[:1000]
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e))
