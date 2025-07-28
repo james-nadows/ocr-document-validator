@@ -32,7 +32,7 @@ DOCUMENT_KEYWORDS = {
     103: ["passport", "republic of the philippines passport"],
     104: ["driver's license", "dln"],
     102: ["business permit"],
-    106: ["taxpayer identification number", "tin id"],
+    106: ["tin"],
     123: ["articles of incorporation", "incorporated"],
     124: ["license", "permit", "business permit"],
     125: ["general information sheet", "gis"],
@@ -47,7 +47,8 @@ DOCUMENT_KEYWORDS = {
             "passport", 
             "identification", 
             "driver's license", 
-            "dln"
+            "dln",
+            "tin"
         ],
 }
 
